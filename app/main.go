@@ -1,71 +1,70 @@
 package main
 
 import (
+    "context"
     "fmt"
     "log"
     "net/http"
     "os"
+    "strconv"
     "github.com/go-redis/redis/v8"
     "github.com/gorilla/mux"
-    "context"
-    "strconv"
 )
 
 var ctx = context.Background()
+var rdb *redis.Client
 
-// Initialize Redis client
-var rdb = redis.NewClient(&redis.Options{
-    Addr:     fmt.Sprintf(os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT")),
-    Password: "", // No password set
-    DB:       0,  // Default DB
-})
-
-func db_checker() {
-	err := rdb.Ping(ctx).Err()  
-	if err != nil {
-		fmt.Println("Redis is not connected:", err)
-		os.Exit(1)
-	} else {
-		fmt.Println("Redis is successfully connected!")
-	}
+func db_checker() error {
+    if err := rdb.Ping(ctx).Err(); err != nil {
+        fmt.Println("Redis is not connected:", err)
+        return err
+    }
+    fmt.Println("Redis is successfully connected!")
+    return nil
 }
 
 func hello(w http.ResponseWriter, r *http.Request) {
+    fmt.Println("Wow! A new visit")
 
-	// Logging in app stdout
-	fmt.Println("Wow! A new visit")
-
-    // Get the current visit count
     visits, err := rdb.Get(ctx, "visits").Result()
     if err != nil {
-		// Check the Redis server
-		db_checker()
         visits = "0"
     }
 
-    // Increment visit count
-    newVisits, err := strconv.Atoi(visits) // Convert string to integer
+    newVisits, err := strconv.Atoi(visits)
     if err != nil {
         fmt.Println("Error converting visits to integer:", err)
         newVisits = 0
     }
     newVisits++
 
-    // Store the updated visit count
     rdb.Set(ctx, "visits", strconv.Itoa(newVisits), 0)
 
-    // Respond with the visit count
     fmt.Fprintf(w, "Hello, World! You are visitor number %d.", newVisits)
 }
 
 func main() {
-	// Check the Redis server
-	db_checker()
+    redisHost := os.Getenv("REDIS_HOST")
+    redisPort := os.Getenv("REDIS_PORT")
+    appPort := os.Getenv("APP_PORT")
 
-	// Start the Go App server
+    if redisHost == "" || redisPort == "" {
+        log.Fatal("REDIS_HOST or REDIS_PORT is not set")
+    }
+
+    rdb = redis.NewClient(&redis.Options{
+        Addr: fmt.Sprintf("%s:%s", redisHost, redisPort),
+        Password: "",
+        DB:       0,
+    })
+
+    if err := db_checker(); err != nil {
+        log.Fatal(err)
+    }
+
     router := mux.NewRouter()
     router.HandleFunc("/", hello)
 
-    fmt.Println("Server is running...")
-    log.Fatal(http.ListenAndServe(":" + os.Getenv("APP_PORT"), router))
+    fmt.Println("Server is running on port", appPort)
+    log.Fatal(http.ListenAndServe(":"+appPort, router))
 }
