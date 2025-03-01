@@ -23,6 +23,12 @@ func db_checker() error {
     return nil
 }
 
+func healthCheck(w http.ResponseWriter, r *http.Request) {
+    // Simple health check response
+    w.WriteHeader(http.StatusOK)
+    fmt.Fprintln(w, "Healthy")
+}
+
 func hello(w http.ResponseWriter, r *http.Request) {
     fmt.Println("Wow! A new visit")
 
@@ -64,6 +70,7 @@ func main() {
 
     router := mux.NewRouter()
     router.HandleFunc("/", hello)
+    router.HandleFunc("/health", healthCheck)
 
     fmt.Println("Server is running on port", appPort)
     log.Fatal(http.ListenAndServe(":"+appPort, router))
