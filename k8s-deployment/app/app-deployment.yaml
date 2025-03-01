@@ -21,6 +21,13 @@ spec:
         envFrom:
         - configMapRef:
             name: app-config
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "500m"
+          limits:
+            memory: "256Mi"
+            cpu: "1"
         readinessProbe:
           httpGet:
             path: /
