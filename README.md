@@ -1,45 +1,79 @@
-# DevOps Challenge: Fix &amp; Deploy Go App with Redis
+🚀 DevOps Challenge -- EYouth X DEPI Tech
+========================================
 
-##  Overview:
-- Your task is to troubleshoot, fix, and deploy a Go web application that uses Redis for caching. There are some issues in the Dockerfile or the Go code. After fixing these issues, you'll deploy the app to a Kubernetes cluster with Redis.
+This repository contains my solution to the **Docker & Kubernetes Challenge**.
 
+📌 Challenge Overview
+---------------------
 
-## Part 1: Fix the Dockerfile and Go Application
+The goal was to:
 
-- You’re given a Dockerfile & Go source code & dependencies.
-- The Go app uses Redis to cache the number of visitors.
-- Review and fix the issues in the Dockerfile or Go code to be able to build and run the app successfully.
-- **Important:** For the Go app to run, you must have a running Redis container.
-- **Bonus:** optimize the Go app image size. 
+1.  Containerize a Go application with Redis.
 
+2.  Optimize Docker image size.
 
-## Part 2: Deploy to Kubernetes
-- Create Kubernetes YAML files to deploy Go (as **stateless** workload) and Redis (as **stateful** workload).
-- Use **separate namespaces: "app" & "db"**.
-- Redis should have persistent storage & network ID.
-- Manage variables using Kubernetes native capabilities.
-- One pod per each workload is fine, no need for over provisioning.
-- Expose the Go app using nodeport or loadbalancer service.
-- Redis should be exposed with the appropriate service type that is suitable for internal communications.
+3.  Deploy the application on Kubernetes.
 
+4.  Troubleshoot and fix issues encountered during deployment.
 
-# Deliverables:
-- A Github repository contains:
-    - Fixed Dockerfile & Go App code.
-    - Working Kubernetes YAML files.
-- Evidence of the working Docker container & image build (status & logs & screenshots).
-- Evidence of the working Kubernetes YAML files (status & logs & screenshots).
-- **Bonus:** Evidence of optimized image size. 
+* * * * *
 
+🐳 Docker Setup
+---------------
 
-# This challenge will help you:
+-   Built **two containers**:
 
-- Troubleshoot Dockerfiles and Go applications.
-- Build and run Docker containers locally.
-- Deploy stateful & stateless workload to Kubernetes.
-- Manage configurations and variables in Kubernetes environments.
-- Use storage persistence in Kubernetes environments.
-- Manage traffic across namespaces & persistent network IDs.
-- Optimize Docker images size. 
+    1.  Go Application
 
+    2.  Redis
 
+-   Connected them using Docker's internal network.
+
+✅ Proof of working setup included in screenshots.
+
+### Image Optimization
+
+-   **Before:** `1.03 GB`
+
+-   **After:** `24.5 MB`
+
+-   Achieved by using a **multi-stage Docker build**.
+
+* * * * *
+
+☸️ Kubernetes Deployment
+------------------------
+
+Deployment was done in **3 steps**:
+
+1.  **Namespaces** -- Created and applied namespaces for better organization.
+
+2.  **Redis** -- Configured storage, deployment, and verified functionality.
+
+3.  **Go App** -- Deployed and verified application functionality.
+
+* * * * *
+
+⚡ Issue Encountered
+-------------------
+
+-   **Problem:** Readiness & liveness probes were hitting `/`, which increased the visit counter incorrectly.
+
+-   **Solution:** Added a dedicated `/health` endpoint for probes.
+
+-   **Outcome:** Health checks no longer interfere with real visit counts.
+
+* * * * *
+
+📂 Repository Structure
+-----------------------
+
+`docker-k8s-challenge/
+├── Dockerfile
+├── k8s/
+│   ├── namespace.yaml
+│   ├── redis-deployment.yaml
+│   ├── redis-service.yaml
+│   ├── app-deployment.yaml
+│   ├── app-service.yaml
+└── README.md`
